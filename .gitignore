@@ -1,0 +1,6 @@
+node_modules/
+*.pem
+*.key
+server.py
+simple-server.bat
+package-lock.json
