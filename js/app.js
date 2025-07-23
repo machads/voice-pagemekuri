@@ -171,11 +171,15 @@ class VoicePageNavigator {
         if (cleanCommand.includes('次') || cleanCommand.includes('つぎ') || 
             cleanCommand.includes('下') || cleanCommand.includes('した') ||
             cleanCommand.includes('進む') || cleanCommand.includes('すすむ')) {
-            this.scrollDown();
+            this.goForward();
         } else if (cleanCommand.includes('前') || cleanCommand.includes('まえ') || 
                    cleanCommand.includes('上') || cleanCommand.includes('うえ') ||
                    cleanCommand.includes('戻る') || cleanCommand.includes('もどる')) {
-            this.scrollUp();
+            this.goBack();
+        } else if (cleanCommand.includes('開く') || cleanCommand.includes('ひらく')) {
+            this.loadUrl();
+        } else if (cleanCommand.includes('ホーム') || cleanCommand.includes('ほーむ')) {
+            this.goHome();
         }
         
         setTimeout(() => {
@@ -660,6 +664,12 @@ class VoicePageNavigator {
         } else {
             this.showMessage('これ以上進めません');
         }
+    }
+    
+    goHome() {
+        this.contentFrame.src = 'about:blank';
+        this.urlInput.value = '';
+        this.showMessage('ホームに戻りました');
     }
     
     updateNavigationButtons() {
