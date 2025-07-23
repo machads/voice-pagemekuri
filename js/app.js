@@ -293,24 +293,65 @@ class VoicePageNavigator {
         // iframe内のページをスクロールする方法を複数試行
         let scrolled = false;
         
+        // フォーカスベースのスクロール - 最も確実な方法
         try {
-            // 方法1: contentDocument経由
-            const frameDoc = this.contentFrame.contentDocument;
-            if (frameDoc) {
-                const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
-                const scrollAmount = 500; // 固定値でテスト
-                const newPosition = Math.max(0, currentScroll - scrollAmount);
+            console.log('Method 1 - Focus-based scroll attempt');
+            
+            // iframeにフォーカスを当ててキーイベントをシミュレート
+            this.contentFrame.focus();
+            
+            // 少し待ってからキーイベントを送信
+            setTimeout(() => {
+                // PageUpキーイベントを作成
+                const keyEvent = new KeyboardEvent('keydown', {
+                    key: 'PageUp',
+                    code: 'PageUp', 
+                    keyCode: 33,
+                    which: 33,
+                    bubbles: true,
+                    cancelable: true
+                });
                 
-                console.log('Method 1 - Current scroll:', currentScroll, 'New position:', newPosition);
+                // メインドキュメントにキーイベントを送信
+                document.dispatchEvent(keyEvent);
                 
-                frameDoc.documentElement.scrollTop = newPosition;
-                frameDoc.body.scrollTop = newPosition; // 古いブラウザ対応
+                // iframeにも送信を試行
+                try {
+                    this.contentFrame.contentDocument.dispatchEvent(keyEvent);
+                } catch(e) {
+                    console.log('iframe key dispatch failed:', e.message);
+                }
                 
-                scrolled = true;
-                this.showMessage(`上にスクロールしました (${currentScroll} → ${newPosition})`);
-            }
+                console.log('Method 1 - PageUp key event dispatched');
+            }, 50);
+            
+            this.showMessage('上スクロール（キー操作）');
+            scrolled = true;
+            
         } catch (error) {
             console.log('Method 1 failed:', error.message);
+        }
+        
+        if (!scrolled) {
+            try {
+                // 方法2: contentDocument経由
+                const frameDoc = this.contentFrame.contentDocument;
+                if (frameDoc) {
+                    const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
+                    const scrollAmount = 500; // 固定値でテスト
+                    const newPosition = Math.max(0, currentScroll - scrollAmount);
+                    
+                    console.log('Method 2 - Current scroll:', currentScroll, 'New position:', newPosition);
+                    
+                    frameDoc.documentElement.scrollTop = newPosition;
+                    frameDoc.body.scrollTop = newPosition; // 古いブラウザ対応
+                    
+                    scrolled = true;
+                    this.showMessage(`上にスクロールしました (${currentScroll} → ${newPosition})`);
+                }
+            } catch (error) {
+                console.log('Method 2 failed:', error.message);
+            }
         }
         
         if (!scrolled) {
@@ -407,25 +448,66 @@ class VoicePageNavigator {
         // iframe内のページをスクロールする方法を複数試行
         let scrolled = false;
         
+        // フォーカスベースのスクロール - 最も確実な方法
         try {
-            // 方法1: contentDocument経由
-            const frameDoc = this.contentFrame.contentDocument;
-            if (frameDoc) {
-                const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
-                const scrollAmount = 500; // 固定値でテスト
-                const maxScroll = frameDoc.documentElement.scrollHeight - frameDoc.documentElement.clientHeight;
-                const newPosition = Math.min(maxScroll, currentScroll + scrollAmount);
+            console.log('Method 1 - Focus-based scroll attempt');
+            
+            // iframeにフォーカスを当ててキーイベントをシミュレート
+            this.contentFrame.focus();
+            
+            // 少し待ってからキーイベントを送信
+            setTimeout(() => {
+                // PageDownキーイベントを作成
+                const keyEvent = new KeyboardEvent('keydown', {
+                    key: 'PageDown',
+                    code: 'PageDown',
+                    keyCode: 34,
+                    which: 34,
+                    bubbles: true,
+                    cancelable: true
+                });
                 
-                console.log('Method 1 - Current scroll:', currentScroll, 'Max scroll:', maxScroll, 'New position:', newPosition);
+                // メインドキュメントにキーイベントを送信
+                document.dispatchEvent(keyEvent);
                 
-                frameDoc.documentElement.scrollTop = newPosition;
-                frameDoc.body.scrollTop = newPosition; // 古いブラウザ対応
+                // iframeにも送信を試行
+                try {
+                    this.contentFrame.contentDocument.dispatchEvent(keyEvent);
+                } catch(e) {
+                    console.log('iframe key dispatch failed:', e.message);
+                }
                 
-                scrolled = true;
-                this.showMessage(`下にスクロールしました (${currentScroll} → ${newPosition})`);
-            }
+                console.log('Method 1 - PageDown key event dispatched');
+            }, 50);
+            
+            this.showMessage('下スクロール（キー操作）');
+            scrolled = true;
+            
         } catch (error) {
             console.log('Method 1 failed:', error.message);
+        }
+        
+        if (!scrolled) {
+            try {
+                // 方法2: contentDocument経由
+                const frameDoc = this.contentFrame.contentDocument;
+                if (frameDoc) {
+                    const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
+                    const scrollAmount = 500; // 固定値でテスト
+                    const maxScroll = frameDoc.documentElement.scrollHeight - frameDoc.documentElement.clientHeight;
+                    const newPosition = Math.min(maxScroll, currentScroll + scrollAmount);
+                    
+                    console.log('Method 2 - Current scroll:', currentScroll, 'Max scroll:', maxScroll, 'New position:', newPosition);
+                    
+                    frameDoc.documentElement.scrollTop = newPosition;
+                    frameDoc.body.scrollTop = newPosition; // 古いブラウザ対応
+                    
+                    scrolled = true;
+                    this.showMessage(`下にスクロールしました (${currentScroll} → ${newPosition})`);
+                }
+            } catch (error) {
+                console.log('Method 2 failed:', error.message);
+            }
         }
         
         if (!scrolled) {
