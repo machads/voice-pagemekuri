@@ -168,12 +168,14 @@ class VoicePageNavigator {
         
         console.log('Voice command:', cleanCommand);
         
-        if (cleanCommand.includes('次') || cleanCommand.includes('つぎ') || cleanCommand.includes('進む')) {
-            this.goForward();
+        if (cleanCommand.includes('次') || cleanCommand.includes('つぎ') || 
+            cleanCommand.includes('下') || cleanCommand.includes('した') ||
+            cleanCommand.includes('進む') || cleanCommand.includes('すすむ')) {
+            this.scrollDown();
         } else if (cleanCommand.includes('前') || cleanCommand.includes('まえ') || 
-                   cleanCommand.includes('戻る') || cleanCommand.includes('もどる') ||
-                   cleanCommand.includes('後ろ') || cleanCommand.includes('うしろ')) {
-            this.goBack();
+                   cleanCommand.includes('上') || cleanCommand.includes('うえ') ||
+                   cleanCommand.includes('戻る') || cleanCommand.includes('もどる')) {
+            this.scrollUp();
         }
         
         setTimeout(() => {
@@ -225,6 +227,52 @@ class VoicePageNavigator {
         this.history.push(url);
         this.currentIndex = this.history.length - 1;
         this.updateNavigationButtons();
+    }
+    
+    scrollUp() {
+        try {
+            // iframe内のページをスクロール
+            const frameDoc = this.contentFrame.contentDocument || this.contentFrame.contentWindow.document;
+            const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
+            const scrollAmount = window.innerHeight * 0.8; // 画面の80%分
+            
+            frameDoc.documentElement.scrollTop = Math.max(0, currentScroll - scrollAmount);
+            this.showMessage('上にスクロールしました');
+        } catch (error) {
+            // CORS等でiframe内にアクセスできない場合は、iframe自体をスクロール
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollAmount = window.innerHeight * 0.8;
+            
+            window.scrollTo({
+                top: Math.max(0, currentScroll - scrollAmount),
+                behavior: 'smooth'
+            });
+            this.showMessage('上にスクロールしました');
+        }
+    }
+    
+    scrollDown() {
+        try {
+            // iframe内のページをスクロール
+            const frameDoc = this.contentFrame.contentDocument || this.contentFrame.contentWindow.document;
+            const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
+            const scrollAmount = window.innerHeight * 0.8; // 画面の80%分
+            const maxScroll = frameDoc.documentElement.scrollHeight - frameDoc.documentElement.clientHeight;
+            
+            frameDoc.documentElement.scrollTop = Math.min(maxScroll, currentScroll + scrollAmount);
+            this.showMessage('下にスクロールしました');
+        } catch (error) {
+            // CORS等でiframe内にアクセスできない場合は、iframe自体をスクロール
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollAmount = window.innerHeight * 0.8;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            
+            window.scrollTo({
+                top: Math.min(maxScroll, currentScroll + scrollAmount),
+                behavior: 'smooth'
+            });
+            this.showMessage('下にスクロールしました');
+        }
     }
     
     goBack() {
