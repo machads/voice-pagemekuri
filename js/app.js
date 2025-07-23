@@ -80,7 +80,27 @@ class VoicePageNavigator {
         
         this.recognition.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
-            this.showError(`音声認識エラー: ${event.error}`);
+            console.error('Error details:', event);
+            
+            let errorMsg = '';
+            switch(event.error) {
+                case 'network':
+                    errorMsg = 'ネットワークエラー - インターネット接続を確認してください';
+                    break;
+                case 'not-allowed':
+                    errorMsg = 'マイクへのアクセスが拒否されました。ブラウザの設定でマイクを許可してください';
+                    break;
+                case 'audio-capture':
+                    errorMsg = 'マイクが見つかりません。マイクが接続されているか確認してください';
+                    break;
+                case 'no-speech':
+                    errorMsg = '音声が検出されませんでした';
+                    break;
+                default:
+                    errorMsg = `音声認識エラー: ${event.error}`;
+            }
+            
+            this.showError(errorMsg);
         };
     }
     
