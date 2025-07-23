@@ -280,7 +280,37 @@ class VoicePageNavigator {
         }
         
         if (!scrolled) {
-            // 方法3: postMessage を使用してiframe内のページに指示
+            // 方法3: より強力なスクロール - iframe内にスクリプトを注入
+            try {
+                const frameDoc = this.contentFrame.contentDocument;
+                if (frameDoc) {
+                    // iframe内で直接スクロールを実行
+                    const script = frameDoc.createElement('script');
+                    script.textContent = `
+                        console.log('Injected scroll script - up');
+                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                        const scrollAmount = 500;
+                        const newPosition = Math.max(0, currentScroll - scrollAmount);
+                        window.scrollTo({
+                            top: newPosition,
+                            behavior: 'smooth'
+                        });
+                        console.log('Scroll executed:', currentScroll, '→', newPosition);
+                    `;
+                    frameDoc.head.appendChild(script);
+                    frameDoc.head.removeChild(script); // 実行後に削除
+                    
+                    console.log('Method 3 - Script injection successful');
+                    this.showMessage('スクリプト注入でスクロールしました');
+                    scrolled = true;
+                }
+            } catch (error) {
+                console.log('Method 3 failed:', error.message);
+            }
+        }
+        
+        if (!scrolled) {
+            // 方法4: postMessage を使用してiframe内のページに指示
             try {
                 this.contentFrame.contentWindow.postMessage({
                     action: 'scroll',
@@ -288,16 +318,16 @@ class VoicePageNavigator {
                     amount: 500
                 }, '*');
                 
-                console.log('Method 3 - PostMessage sent');
+                console.log('Method 4 - PostMessage sent');
                 this.showMessage('上にスクロール指示を送信しました');
                 scrolled = true;
             } catch (error) {
-                console.log('Method 3 failed:', error.message);
+                console.log('Method 4 failed:', error.message);
             }
         }
         
         if (!scrolled) {
-            // 方法4: キーボードイベントシミュレーション
+            // 方法5: キーボードイベントシミュレーション
             try {
                 const frameWindow = this.contentFrame.contentWindow;
                 if (frameWindow) {
@@ -311,12 +341,12 @@ class VoicePageNavigator {
                     });
                     frameWindow.document.dispatchEvent(event);
                     
-                    console.log('Method 4 - PageUp key simulated');
+                    console.log('Method 5 - PageUp key simulated');
                     this.showMessage('上キーをシミュレートしました');
                     scrolled = true;
                 }
             } catch (error) {
-                console.log('Method 4 failed:', error.message);
+                console.log('Method 5 failed:', error.message);
             }
         }
         
@@ -379,7 +409,38 @@ class VoicePageNavigator {
         }
         
         if (!scrolled) {
-            // 方法3: postMessage を使用してiframe内のページに指示
+            // 方法3: より強力なスクロール - iframe内にスクリプトを注入
+            try {
+                const frameDoc = this.contentFrame.contentDocument;
+                if (frameDoc) {
+                    // iframe内で直接スクロールを実行
+                    const script = frameDoc.createElement('script');
+                    script.textContent = `
+                        console.log('Injected scroll script - down');
+                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                        const scrollAmount = 500;
+                        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                        const newPosition = Math.min(maxScroll, currentScroll + scrollAmount);
+                        window.scrollTo({
+                            top: newPosition,
+                            behavior: 'smooth'
+                        });
+                        console.log('Scroll executed:', currentScroll, '→', newPosition);
+                    `;
+                    frameDoc.head.appendChild(script);
+                    frameDoc.head.removeChild(script); // 実行後に削除
+                    
+                    console.log('Method 3 - Script injection successful');
+                    this.showMessage('スクリプト注入でスクロールしました');
+                    scrolled = true;
+                }
+            } catch (error) {
+                console.log('Method 3 failed:', error.message);
+            }
+        }
+        
+        if (!scrolled) {
+            // 方法4: postMessage を使用してiframe内のページに指示
             try {
                 this.contentFrame.contentWindow.postMessage({
                     action: 'scroll',
@@ -387,16 +448,16 @@ class VoicePageNavigator {
                     amount: 500
                 }, '*');
                 
-                console.log('Method 3 - PostMessage sent');
+                console.log('Method 4 - PostMessage sent');
                 this.showMessage('下にスクロール指示を送信しました');
                 scrolled = true;
             } catch (error) {
-                console.log('Method 3 failed:', error.message);
+                console.log('Method 4 failed:', error.message);
             }
         }
         
         if (!scrolled) {
-            // 方法4: キーボードイベントシミュレーション
+            // 方法5: キーボードイベントシミュレーション
             try {
                 const frameWindow = this.contentFrame.contentWindow;
                 if (frameWindow) {
@@ -410,12 +471,12 @@ class VoicePageNavigator {
                     });
                     frameWindow.document.dispatchEvent(event);
                     
-                    console.log('Method 4 - PageDown key simulated');
+                    console.log('Method 5 - PageDown key simulated');
                     this.showMessage('下キーをシミュレートしました');
                     scrolled = true;
                 }
             } catch (error) {
-                console.log('Method 4 failed:', error.message);
+                console.log('Method 5 failed:', error.message);
             }
         }
         
