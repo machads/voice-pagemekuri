@@ -230,48 +230,198 @@ class VoicePageNavigator {
     }
     
     scrollUp() {
+        console.log('scrollUp called');
+        
+        // iframe内のページをスクロールする方法を複数試行
+        let scrolled = false;
+        
         try {
-            // iframe内のページをスクロール
-            const frameDoc = this.contentFrame.contentDocument || this.contentFrame.contentWindow.document;
-            const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
-            const scrollAmount = window.innerHeight * 0.8; // 画面の80%分
-            
-            frameDoc.documentElement.scrollTop = Math.max(0, currentScroll - scrollAmount);
-            this.showMessage('上にスクロールしました');
+            // 方法1: contentDocument経由
+            const frameDoc = this.contentFrame.contentDocument;
+            if (frameDoc) {
+                const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
+                const scrollAmount = 500; // 固定値でテスト
+                const newPosition = Math.max(0, currentScroll - scrollAmount);
+                
+                console.log('Method 1 - Current scroll:', currentScroll, 'New position:', newPosition);
+                
+                frameDoc.documentElement.scrollTop = newPosition;
+                frameDoc.body.scrollTop = newPosition; // 古いブラウザ対応
+                
+                scrolled = true;
+                this.showMessage(`上にスクロールしました (${currentScroll} → ${newPosition})`);
+            }
         } catch (error) {
-            // CORS等でiframe内にアクセスできない場合は、iframe自体をスクロール
-            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-            const scrollAmount = window.innerHeight * 0.8;
-            
-            window.scrollTo({
-                top: Math.max(0, currentScroll - scrollAmount),
-                behavior: 'smooth'
-            });
-            this.showMessage('上にスクロールしました');
+            console.log('Method 1 failed:', error.message);
+        }
+        
+        if (!scrolled) {
+            try {
+                // 方法2: contentWindow経由
+                const frameWindow = this.contentFrame.contentWindow;
+                if (frameWindow) {
+                    const currentScroll = frameWindow.pageYOffset || frameWindow.scrollY;
+                    const scrollAmount = 500;
+                    const newPosition = Math.max(0, currentScroll - scrollAmount);
+                    
+                    console.log('Method 2 - Current scroll:', currentScroll, 'New position:', newPosition);
+                    
+                    frameWindow.scrollTo({
+                        top: newPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    scrolled = true;
+                    this.showMessage(`上にスクロールしました (${currentScroll} → ${newPosition})`);
+                }
+            } catch (error) {
+                console.log('Method 2 failed:', error.message);
+            }
+        }
+        
+        if (!scrolled) {
+            // 方法3: postMessage を使用してiframe内のページに指示
+            try {
+                this.contentFrame.contentWindow.postMessage({
+                    action: 'scroll',
+                    direction: 'up',
+                    amount: 500
+                }, '*');
+                
+                console.log('Method 3 - PostMessage sent');
+                this.showMessage('上にスクロール指示を送信しました');
+                scrolled = true;
+            } catch (error) {
+                console.log('Method 3 failed:', error.message);
+            }
+        }
+        
+        if (!scrolled) {
+            // 方法4: キーボードイベントシミュレーション
+            try {
+                const frameWindow = this.contentFrame.contentWindow;
+                if (frameWindow) {
+                    // PageUpキーをシミュレート
+                    const event = new frameWindow.KeyboardEvent('keydown', {
+                        key: 'PageUp',
+                        code: 'PageUp',
+                        keyCode: 33,
+                        which: 33,
+                        bubbles: true
+                    });
+                    frameWindow.document.dispatchEvent(event);
+                    
+                    console.log('Method 4 - PageUp key simulated');
+                    this.showMessage('上キーをシミュレートしました');
+                    scrolled = true;
+                }
+            } catch (error) {
+                console.log('Method 4 failed:', error.message);
+            }
+        }
+        
+        if (!scrolled) {
+            console.log('All scroll methods failed - iframe access restricted');
+            this.showMessage('スクロールできません。CORS制限またはiframeアクセス制限があります。');
         }
     }
     
     scrollDown() {
+        console.log('scrollDown called');
+        
+        // iframe内のページをスクロールする方法を複数試行
+        let scrolled = false;
+        
         try {
-            // iframe内のページをスクロール
-            const frameDoc = this.contentFrame.contentDocument || this.contentFrame.contentWindow.document;
-            const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
-            const scrollAmount = window.innerHeight * 0.8; // 画面の80%分
-            const maxScroll = frameDoc.documentElement.scrollHeight - frameDoc.documentElement.clientHeight;
-            
-            frameDoc.documentElement.scrollTop = Math.min(maxScroll, currentScroll + scrollAmount);
-            this.showMessage('下にスクロールしました');
+            // 方法1: contentDocument経由
+            const frameDoc = this.contentFrame.contentDocument;
+            if (frameDoc) {
+                const currentScroll = frameDoc.documentElement.scrollTop || frameDoc.body.scrollTop;
+                const scrollAmount = 500; // 固定値でテスト
+                const maxScroll = frameDoc.documentElement.scrollHeight - frameDoc.documentElement.clientHeight;
+                const newPosition = Math.min(maxScroll, currentScroll + scrollAmount);
+                
+                console.log('Method 1 - Current scroll:', currentScroll, 'Max scroll:', maxScroll, 'New position:', newPosition);
+                
+                frameDoc.documentElement.scrollTop = newPosition;
+                frameDoc.body.scrollTop = newPosition; // 古いブラウザ対応
+                
+                scrolled = true;
+                this.showMessage(`下にスクロールしました (${currentScroll} → ${newPosition})`);
+            }
         } catch (error) {
-            // CORS等でiframe内にアクセスできない場合は、iframe自体をスクロール
-            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-            const scrollAmount = window.innerHeight * 0.8;
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            
-            window.scrollTo({
-                top: Math.min(maxScroll, currentScroll + scrollAmount),
-                behavior: 'smooth'
-            });
-            this.showMessage('下にスクロールしました');
+            console.log('Method 1 failed:', error.message);
+        }
+        
+        if (!scrolled) {
+            try {
+                // 方法2: contentWindow経由
+                const frameWindow = this.contentFrame.contentWindow;
+                if (frameWindow) {
+                    const currentScroll = frameWindow.pageYOffset || frameWindow.scrollY;
+                    const scrollAmount = 500;
+                    const maxScroll = frameWindow.document.documentElement.scrollHeight - frameWindow.innerHeight;
+                    const newPosition = Math.min(maxScroll, currentScroll + scrollAmount);
+                    
+                    console.log('Method 2 - Current scroll:', currentScroll, 'Max scroll:', maxScroll, 'New position:', newPosition);
+                    
+                    frameWindow.scrollTo({
+                        top: newPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    scrolled = true;
+                    this.showMessage(`下にスクロールしました (${currentScroll} → ${newPosition})`);
+                }
+            } catch (error) {
+                console.log('Method 2 failed:', error.message);
+            }
+        }
+        
+        if (!scrolled) {
+            // 方法3: postMessage を使用してiframe内のページに指示
+            try {
+                this.contentFrame.contentWindow.postMessage({
+                    action: 'scroll',
+                    direction: 'down',
+                    amount: 500
+                }, '*');
+                
+                console.log('Method 3 - PostMessage sent');
+                this.showMessage('下にスクロール指示を送信しました');
+                scrolled = true;
+            } catch (error) {
+                console.log('Method 3 failed:', error.message);
+            }
+        }
+        
+        if (!scrolled) {
+            // 方法4: キーボードイベントシミュレーション
+            try {
+                const frameWindow = this.contentFrame.contentWindow;
+                if (frameWindow) {
+                    // PageDownキーをシミュレート
+                    const event = new frameWindow.KeyboardEvent('keydown', {
+                        key: 'PageDown',
+                        code: 'PageDown',
+                        keyCode: 34,
+                        which: 34,
+                        bubbles: true
+                    });
+                    frameWindow.document.dispatchEvent(event);
+                    
+                    console.log('Method 4 - PageDown key simulated');
+                    this.showMessage('下キーをシミュレートしました');
+                    scrolled = true;
+                }
+            } catch (error) {
+                console.log('Method 4 failed:', error.message);
+            }
+        }
+        
+        if (!scrolled) {
+            console.log('All scroll methods failed - iframe access restricted');
+            this.showMessage('スクロールできません。CORS制限またはiframeアクセス制限があります。');
         }
     }
     
