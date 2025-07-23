@@ -3,25 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>音声ページナビゲーター</title>
+    <title>Kindle音声ページナビゲーター</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- <link rel="manifest" href="manifest.json"> -->
     <meta name="theme-color" content="#4285f4">
 </head>
 <body>
     <header>
-        <h1>音声ページナビゲーター</h1>
+        <h1>🎧 Kindle音声ページナビゲーター</h1>
         
-        <!-- URL入力バー -->
+        <!-- Kindle URL入力バー -->
         <div class="url-bar">
             <button id="backBtn" class="nav-btn">←</button>
             <button id="forwardBtn" class="nav-btn">→</button>
-            <input type="url" id="urlInput" placeholder="URLを入力（例: https://note.com）">
-            <label class="proxy-option">
-                <input type="checkbox" id="useProxy">
-                プロキシ
-            </label>
-            <button id="goBtn" class="go-btn">開く</button>
+            <input type="url" id="urlInput" placeholder="Kindle Cloud Reader URL を入力">
+            <button id="goBtn" class="go-btn">Kindle開く</button>
+        </div>
+        
+        <!-- Kindleコントロール -->
+        <div class="kindle-controls">
+            <button id="prevPageBtn" class="page-btn">前のページ</button>
+            <button id="nextPageBtn" class="page-btn">次のページ</button>
+            <button id="kindleHomeBtn" class="home-btn">Kindleホーム</button>
         </div>
         
         <!-- 音声認識コントロール -->
@@ -35,9 +38,15 @@
         
         <!-- 使い方 -->
         <details class="help">
-            <summary>使い方</summary>
-            <p>音声コマンド: 「次」「下」で次のページ、「前」「上」で前のページ</p>
-            <p>※現在: ページ履歴での移動（スクロールではなく別ページに移動）</p>
+            <summary>📖 Kindle音声コマンド</summary>
+            <div class="help-content">
+                <p><strong>ページ操作：</strong></p>
+                <p>• 「次のページ」「次」「進む」→ 次のページ</p>
+                <p>• 「前のページ」「前」「戻る」→ 前のページ</p>
+                <p><strong>その他：</strong></p>
+                <p>• 「ホーム」→ Kindleライブラリに戻る</p>
+                <p>• 「開く」→ 入力したKindleURLを開く</p>
+            </div>
         </details>
     </header>
     

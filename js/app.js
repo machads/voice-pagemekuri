@@ -1,4 +1,4 @@
-class VoicePageNavigator {
+class KindleVoiceNavigator {
     constructor() {
         this.recognition = null;
         this.isListening = false;
@@ -19,6 +19,11 @@ class VoicePageNavigator {
         this.backBtn = document.getElementById('backBtn');
         this.forwardBtn = document.getElementById('forwardBtn');
         this.contentFrame = document.getElementById('contentFrame');
+        
+        // Kindle専用ボタン
+        this.prevPageBtn = document.getElementById('prevPageBtn');
+        this.nextPageBtn = document.getElementById('nextPageBtn');
+        this.kindleHomeBtn = document.getElementById('kindleHomeBtn');
     }
     
     initSpeechRecognition() {
@@ -130,6 +135,19 @@ class VoicePageNavigator {
         this.contentFrame.addEventListener('load', () => {
             this.updateNavigationButtons();
         });
+        
+        // Kindle専用ボタンのイベントリスナー
+        this.prevPageBtn.addEventListener('click', () => {
+            this.kindlePrevPage();
+        });
+        
+        this.nextPageBtn.addEventListener('click', () => {
+            this.kindleNextPage();
+        });
+        
+        this.kindleHomeBtn.addEventListener('click', () => {
+            this.kindleGoHome();
+        });
     }
     
     toggleVoiceRecognition() {
@@ -168,18 +186,19 @@ class VoicePageNavigator {
         
         console.log('Voice command:', cleanCommand);
         
-        if (cleanCommand.includes('次') || cleanCommand.includes('つぎ') || 
-            cleanCommand.includes('下') || cleanCommand.includes('した') ||
+        // Kindle専用音声コマンド
+        if (cleanCommand.includes('次のページ') || cleanCommand.includes('次') || cleanCommand.includes('つぎ') || 
             cleanCommand.includes('進む') || cleanCommand.includes('すすむ')) {
-            this.goForward();
-        } else if (cleanCommand.includes('前') || cleanCommand.includes('まえ') || 
-                   cleanCommand.includes('上') || cleanCommand.includes('うえ') ||
+            this.kindleNextPage();
+        } else if (cleanCommand.includes('前のページ') || cleanCommand.includes('前') || cleanCommand.includes('まえ') || 
                    cleanCommand.includes('戻る') || cleanCommand.includes('もどる')) {
-            this.goBack();
+            this.kindlePrevPage();
         } else if (cleanCommand.includes('開く') || cleanCommand.includes('ひらく')) {
             this.loadUrl();
         } else if (cleanCommand.includes('ホーム') || cleanCommand.includes('ほーむ')) {
-            this.goHome();
+            this.kindleGoHome();
+        } else if (cleanCommand.includes('ライブラリ') || cleanCommand.includes('らいぶらり')) {
+            this.kindleGoHome();
         }
         
         setTimeout(() => {
@@ -672,6 +691,159 @@ class VoicePageNavigator {
         this.showMessage('ホームに戻りました');
     }
     
+    // Kindle専用操作メソッド
+    kindleNextPage() {
+        console.log('Kindle next page called');
+        
+        try {
+            const frameWindow = this.contentFrame.contentWindow;
+            if (frameWindow) {
+                // 複数の方法でKindleの次ページを試行
+                
+                // 方法1: 右矢印キー
+                this.sendKeyToKindle(frameWindow, 'ArrowRight', 39);
+                
+                // 方法2: スペースキー
+                setTimeout(() => {
+                    this.sendKeyToKindle(frameWindow, ' ', 32);
+                }, 100);
+                
+                // 方法3: 次ページボタンクリック
+                setTimeout(() => {
+                    this.clickKindleNextButton(frameWindow);
+                }, 200);
+                
+                this.showMessage('📖 次のページ');
+            }
+        } catch (error) {
+            console.log('Kindle next page failed:', error.message);
+            this.showMessage('次のページ操作に失敗しました');
+        }
+    }
+    
+    kindlePrevPage() {
+        console.log('Kindle prev page called');
+        
+        try {
+            const frameWindow = this.contentFrame.contentWindow;
+            if (frameWindow) {
+                // 複数の方法でKindleの前ページを試行
+                
+                // 方法1: 左矢印キー
+                this.sendKeyToKindle(frameWindow, 'ArrowLeft', 37);
+                
+                // 方法2: BackSpaceキー
+                setTimeout(() => {
+                    this.sendKeyToKindle(frameWindow, 'Backspace', 8);
+                }, 100);
+                
+                // 方法3: 前ページボタンクリック
+                setTimeout(() => {
+                    this.clickKindlePrevButton(frameWindow);
+                }, 200);
+                
+                this.showMessage('📖 前のページ');
+            }
+        } catch (error) {
+            console.log('Kindle prev page failed:', error.message);
+            this.showMessage('前のページ操作に失敗しました');
+        }
+    }
+    
+    kindleGoHome() {
+        console.log('Kindle go home called');
+        
+        try {
+            const frameWindow = this.contentFrame.contentWindow;
+            if (frameWindow) {
+                // Kindleホームに戻る操作
+                this.sendKeyToKindle(frameWindow, 'Escape', 27);
+                
+                // または直接URLでライブラリに移動
+                setTimeout(() => {
+                    frameWindow.location.href = 'https://read.amazon.com/kindle-library';
+                }, 500);
+                
+                this.showMessage('📚 Kindleライブラリ');
+            }
+        } catch (error) {
+            console.log('Kindle go home failed:', error.message);
+            this.showMessage('ライブラリに戻る操作に失敗しました');
+        }
+    }
+    
+    sendKeyToKindle(frameWindow, key, keyCode) {
+        try {
+            const keyEvent = new frameWindow.KeyboardEvent('keydown', {
+                key: key,
+                code: key === ' ' ? 'Space' : key,
+                keyCode: keyCode,
+                which: keyCode,
+                bubbles: true,
+                cancelable: true
+            });
+            
+            frameWindow.document.dispatchEvent(keyEvent);
+            frameWindow.dispatchEvent(keyEvent);
+            
+            console.log(`Key ${key} sent to Kindle`);
+        } catch (error) {
+            console.log(`Failed to send key ${key}:`, error.message);
+        }
+    }
+    
+    clickKindleNextButton(frameWindow) {
+        try {
+            const doc = frameWindow.document;
+            
+            // Kindleの次ページボタンを探して클릭
+            const selectors = [
+                '.kr-renderer-page-turner-right',
+                '.next-page',
+                '[data-testid="next-page"]',
+                '.pagination-next',
+                '.kr-next-page'
+            ];
+            
+            for (const selector of selectors) {
+                const button = doc.querySelector(selector);
+                if (button) {
+                    button.click();
+                    console.log(`Clicked next button: ${selector}`);
+                    break;
+                }
+            }
+        } catch (error) {
+            console.log('Failed to click next button:', error.message);
+        }
+    }
+    
+    clickKindlePrevButton(frameWindow) {
+        try {
+            const doc = frameWindow.document;
+            
+            // Kindleの前ページボタンを探してクリック
+            const selectors = [
+                '.kr-renderer-page-turner-left',
+                '.prev-page',
+                '[data-testid="prev-page"]',
+                '.pagination-prev',
+                '.kr-prev-page'
+            ];
+            
+            for (const selector of selectors) {
+                const button = doc.querySelector(selector);
+                if (button) {
+                    button.click();
+                    console.log(`Clicked prev button: ${selector}`);
+                    break;
+                }
+            }
+        } catch (error) {
+            console.log('Failed to click prev button:', error.message);
+        }
+    }
+    
     updateNavigationButtons() {
         this.backBtn.disabled = this.currentIndex <= 0;
         this.forwardBtn.disabled = this.currentIndex >= this.history.length - 1;
@@ -693,5 +865,5 @@ class VoicePageNavigator {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new VoicePageNavigator();
+    new KindleVoiceNavigator();
 });
