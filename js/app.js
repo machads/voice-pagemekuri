@@ -209,6 +209,11 @@ class VoicePageNavigator {
             this.addToHistory(url); // 元のURLを履歴に保存
             this.urlInput.value = url;
             
+            // iframe読み込み完了時にスクロール用スクリプトを注入
+            this.contentFrame.onload = () => {
+                this.injectScrollScript();
+            };
+            
             // iframe読み込みエラーをキャッチ
             this.contentFrame.onerror = () => {
                 this.showError('このサイトはiframe表示を許可していません。プロキシモードを試してください。');
@@ -216,6 +221,59 @@ class VoicePageNavigator {
             
         } catch (error) {
             this.showError('URLの読み込みに失敗しました');
+        }
+    }
+    
+    injectScrollScript() {
+        try {
+            const frameDoc = this.contentFrame.contentDocument;
+            if (frameDoc) {
+                // スクロール用のスクリプトを iframe 内に注入
+                const script = frameDoc.createElement('script');
+                script.id = 'voiceScrollHandler';
+                script.textContent = `
+                    // 音声ナビゲーター用のスクロール処理
+                    window.voiceScrollDown = function() {
+                        console.log('voiceScrollDown called');
+                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                        const scrollAmount = 500;
+                        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                        const newPosition = Math.min(maxScroll, currentScroll + scrollAmount);
+                        window.scrollTo({
+                            top: newPosition,
+                            behavior: 'smooth'
+                        });
+                        console.log('Scroll down executed:', currentScroll, '→', newPosition);
+                        return true;
+                    };
+                    
+                    window.voiceScrollUp = function() {
+                        console.log('voiceScrollUp called');
+                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                        const scrollAmount = 500;
+                        const newPosition = Math.max(0, currentScroll - scrollAmount);
+                        window.scrollTo({
+                            top: newPosition,
+                            behavior: 'smooth'
+                        });
+                        console.log('Scroll up executed:', currentScroll, '→', newPosition);
+                        return true;
+                    };
+                    
+                    console.log('Voice scroll functions injected successfully');
+                `;
+                
+                // 既存のスクリプトがあれば削除
+                const existingScript = frameDoc.getElementById('voiceScrollHandler');
+                if (existingScript) {
+                    existingScript.remove();
+                }
+                
+                frameDoc.head.appendChild(script);
+                console.log('Scroll script injected into iframe');
+            }
+        } catch (error) {
+            console.log('Script injection failed:', error.message);
         }
     }
     
@@ -280,29 +338,16 @@ class VoicePageNavigator {
         }
         
         if (!scrolled) {
-            // 方法3: より強力なスクロール - iframe内にスクリプトを注入
+            // 方法3: 注入済み関数を呼び出し
             try {
-                const frameDoc = this.contentFrame.contentDocument;
-                if (frameDoc) {
-                    // iframe内で直接スクロールを実行
-                    const script = frameDoc.createElement('script');
-                    script.textContent = `
-                        console.log('Injected scroll script - up');
-                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-                        const scrollAmount = 500;
-                        const newPosition = Math.max(0, currentScroll - scrollAmount);
-                        window.scrollTo({
-                            top: newPosition,
-                            behavior: 'smooth'
-                        });
-                        console.log('Scroll executed:', currentScroll, '→', newPosition);
-                    `;
-                    frameDoc.head.appendChild(script);
-                    frameDoc.head.removeChild(script); // 実行後に削除
-                    
-                    console.log('Method 3 - Script injection successful');
-                    this.showMessage('スクリプト注入でスクロールしました');
-                    scrolled = true;
+                const frameWindow = this.contentFrame.contentWindow;
+                if (frameWindow && typeof frameWindow.voiceScrollUp === 'function') {
+                    const result = frameWindow.voiceScrollUp();
+                    if (result) {
+                        console.log('Method 3 - Injected function call successful');
+                        this.showMessage('注入関数でスクロールしました');
+                        scrolled = true;
+                    }
                 }
             } catch (error) {
                 console.log('Method 3 failed:', error.message);
@@ -409,30 +454,16 @@ class VoicePageNavigator {
         }
         
         if (!scrolled) {
-            // 方法3: より強力なスクロール - iframe内にスクリプトを注入
+            // 方法3: 注入済み関数を呼び出し
             try {
-                const frameDoc = this.contentFrame.contentDocument;
-                if (frameDoc) {
-                    // iframe内で直接スクロールを実行
-                    const script = frameDoc.createElement('script');
-                    script.textContent = `
-                        console.log('Injected scroll script - down');
-                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-                        const scrollAmount = 500;
-                        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-                        const newPosition = Math.min(maxScroll, currentScroll + scrollAmount);
-                        window.scrollTo({
-                            top: newPosition,
-                            behavior: 'smooth'
-                        });
-                        console.log('Scroll executed:', currentScroll, '→', newPosition);
-                    `;
-                    frameDoc.head.appendChild(script);
-                    frameDoc.head.removeChild(script); // 実行後に削除
-                    
-                    console.log('Method 3 - Script injection successful');
-                    this.showMessage('スクリプト注入でスクロールしました');
-                    scrolled = true;
+                const frameWindow = this.contentFrame.contentWindow;
+                if (frameWindow && typeof frameWindow.voiceScrollDown === 'function') {
+                    const result = frameWindow.voiceScrollDown();
+                    if (result) {
+                        console.log('Method 3 - Injected function call successful');
+                        this.showMessage('注入関数でスクロールしました');
+                        scrolled = true;
+                    }
                 }
             } catch (error) {
                 console.log('Method 3 failed:', error.message);
