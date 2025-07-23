@@ -300,10 +300,10 @@ class VoicePageNavigator {
             // iframeにフォーカスを当ててキーイベントをシミュレート
             this.contentFrame.focus();
             
-            // 少し待ってからキーイベントを送信
+            // 複数の方法でキーイベントを送信
             setTimeout(() => {
-                // PageUpキーイベントを作成
-                const keyEvent = new KeyboardEvent('keydown', {
+                // 方法A: iframe要素自体にキーイベントを送信
+                const iframeKeyEvent = new KeyboardEvent('keydown', {
                     key: 'PageUp',
                     code: 'PageUp', 
                     keyCode: 33,
@@ -312,18 +312,33 @@ class VoicePageNavigator {
                     cancelable: true
                 });
                 
-                // メインドキュメントにキーイベントを送信
-                document.dispatchEvent(keyEvent);
+                this.contentFrame.dispatchEvent(iframeKeyEvent);
                 
-                // iframeにも送信を試行
+                // 方法B: documentElementに送信
+                const docKeyEvent = new KeyboardEvent('keydown', {
+                    key: 'PageUp',
+                    code: 'PageUp',
+                    keyCode: 33,
+                    which: 33,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                document.documentElement.dispatchEvent(docKeyEvent);
+                
+                // 方法C: window.scrollByを使用（フォールバック）
                 try {
-                    this.contentFrame.contentDocument.dispatchEvent(keyEvent);
+                    const frameWindow = this.contentFrame.contentWindow;
+                    if (frameWindow) {
+                        frameWindow.scrollBy(0, -500);
+                        console.log('Method 1C - window.scrollBy executed');
+                    }
                 } catch(e) {
-                    console.log('iframe key dispatch failed:', e.message);
+                    console.log('scrollBy failed:', e.message);
                 }
                 
-                console.log('Method 1 - PageUp key event dispatched');
-            }, 50);
+                console.log('Method 1 - Multiple key events dispatched');
+            }, 100);
             
             this.showMessage('上スクロール（キー操作）');
             scrolled = true;
@@ -455,10 +470,10 @@ class VoicePageNavigator {
             // iframeにフォーカスを当ててキーイベントをシミュレート
             this.contentFrame.focus();
             
-            // 少し待ってからキーイベントを送信
+            // 複数の方法でキーイベントを送信
             setTimeout(() => {
-                // PageDownキーイベントを作成
-                const keyEvent = new KeyboardEvent('keydown', {
+                // 方法A: iframe要素自体にキーイベントを送信
+                const iframeKeyEvent = new KeyboardEvent('keydown', {
                     key: 'PageDown',
                     code: 'PageDown',
                     keyCode: 34,
@@ -467,18 +482,33 @@ class VoicePageNavigator {
                     cancelable: true
                 });
                 
-                // メインドキュメントにキーイベントを送信
-                document.dispatchEvent(keyEvent);
+                this.contentFrame.dispatchEvent(iframeKeyEvent);
                 
-                // iframeにも送信を試行
+                // 方法B: documentElementに送信
+                const docKeyEvent = new KeyboardEvent('keydown', {
+                    key: 'PageDown',
+                    code: 'PageDown',
+                    keyCode: 34,
+                    which: 34,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                document.documentElement.dispatchEvent(docKeyEvent);
+                
+                // 方法C: window.scrollByを使用（フォールバック）
                 try {
-                    this.contentFrame.contentDocument.dispatchEvent(keyEvent);
+                    const frameWindow = this.contentFrame.contentWindow;
+                    if (frameWindow) {
+                        frameWindow.scrollBy(0, 500);
+                        console.log('Method 1C - window.scrollBy executed');
+                    }
                 } catch(e) {
-                    console.log('iframe key dispatch failed:', e.message);
+                    console.log('scrollBy failed:', e.message);
                 }
                 
-                console.log('Method 1 - PageDown key event dispatched');
-            }, 50);
+                console.log('Method 1 - Multiple key events dispatched');
+            }, 100);
             
             this.showMessage('下スクロール（キー操作）');
             scrolled = true;
