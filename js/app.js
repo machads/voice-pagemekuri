@@ -293,55 +293,60 @@ class VoicePageNavigator {
         // iframe内のページをスクロールする方法を複数試行
         let scrolled = false;
         
-        // フォーカスベースのスクロール - 最も確実な方法
+        // 手動でiframe内のスクロール位置を変更
         try {
-            console.log('Method 1 - Focus-based scroll attempt');
+            console.log('Method 1 - Direct iframe manipulation');
             
-            // iframeにフォーカスを当ててキーイベントをシミュレート
-            this.contentFrame.focus();
-            
-            // 複数の方法でキーイベントを送信
-            setTimeout(() => {
-                // 方法A: iframe要素自体にキーイベントを送信
-                const iframeKeyEvent = new KeyboardEvent('keydown', {
-                    key: 'PageUp',
-                    code: 'PageUp', 
-                    keyCode: 33,
-                    which: 33,
-                    bubbles: true,
-                    cancelable: true
-                });
-                
-                this.contentFrame.dispatchEvent(iframeKeyEvent);
-                
-                // 方法B: documentElementに送信
-                const docKeyEvent = new KeyboardEvent('keydown', {
-                    key: 'PageUp',
-                    code: 'PageUp',
-                    keyCode: 33,
-                    which: 33,
-                    bubbles: true,
-                    cancelable: true
-                });
-                
-                document.documentElement.dispatchEvent(docKeyEvent);
-                
-                // 方法C: window.scrollByを使用（フォールバック）
+            // iframe内のwindowオブジェクトに直接アクセス
+            const frameWindow = this.contentFrame.contentWindow;
+            if (frameWindow) {
+                // 現在のスクロール位置を取得
+                let currentScroll = 0;
                 try {
-                    const frameWindow = this.contentFrame.contentWindow;
-                    if (frameWindow) {
-                        frameWindow.scrollBy(0, -500);
-                        console.log('Method 1C - window.scrollBy executed');
-                    }
+                    currentScroll = frameWindow.pageYOffset || frameWindow.scrollY || 0;
+                    console.log('Current scroll position:', currentScroll);
+                } catch(e) {
+                    console.log('Could not get scroll position:', e.message);
+                }
+                
+                // スクロール量
+                const scrollAmount = 500;
+                const newPosition = Math.max(0, currentScroll - scrollAmount);
+                
+                // 複数の方法でスクロール実行
+                try {
+                    // 方法A: scrollTo
+                    frameWindow.scrollTo(0, newPosition);
+                    console.log('Method 1A - scrollTo executed:', newPosition);
+                } catch(e) {
+                    console.log('scrollTo failed:', e.message);
+                }
+                
+                try {
+                    // 方法B: scrollBy
+                    frameWindow.scrollBy(0, -scrollAmount);
+                    console.log('Method 1B - scrollBy executed:', -scrollAmount);
                 } catch(e) {
                     console.log('scrollBy failed:', e.message);
                 }
                 
-                console.log('Method 1 - Multiple key events dispatched');
-            }, 100);
-            
-            this.showMessage('上スクロール（キー操作）');
-            scrolled = true;
+                try {
+                    // 方法C: location hash manipulation
+                    const hash = frameWindow.location.hash;
+                    frameWindow.location.hash = hash + (hash.includes('scroll') ? '1' : '#scroll');
+                    setTimeout(() => {
+                        frameWindow.history.back();
+                    }, 10);
+                    console.log('Method 1C - hash manipulation executed');
+                } catch(e) {
+                    console.log('hash manipulation failed:', e.message);
+                }
+                
+                scrolled = true;
+                this.showMessage(`上スクロール実行 (${currentScroll} → ${newPosition})`);
+            } else {
+                console.log('frameWindow not accessible');
+            }
             
         } catch (error) {
             console.log('Method 1 failed:', error.message);
@@ -463,55 +468,59 @@ class VoicePageNavigator {
         // iframe内のページをスクロールする方法を複数試行
         let scrolled = false;
         
-        // フォーカスベースのスクロール - 最も確実な方法
+        // 手動でiframe内のスクロール位置を変更
         try {
-            console.log('Method 1 - Focus-based scroll attempt');
+            console.log('Method 1 - Direct iframe manipulation');
             
-            // iframeにフォーカスを当ててキーイベントをシミュレート
-            this.contentFrame.focus();
-            
-            // 複数の方法でキーイベントを送信
-            setTimeout(() => {
-                // 方法A: iframe要素自体にキーイベントを送信
-                const iframeKeyEvent = new KeyboardEvent('keydown', {
-                    key: 'PageDown',
-                    code: 'PageDown',
-                    keyCode: 34,
-                    which: 34,
-                    bubbles: true,
-                    cancelable: true
-                });
-                
-                this.contentFrame.dispatchEvent(iframeKeyEvent);
-                
-                // 方法B: documentElementに送信
-                const docKeyEvent = new KeyboardEvent('keydown', {
-                    key: 'PageDown',
-                    code: 'PageDown',
-                    keyCode: 34,
-                    which: 34,
-                    bubbles: true,
-                    cancelable: true
-                });
-                
-                document.documentElement.dispatchEvent(docKeyEvent);
-                
-                // 方法C: window.scrollByを使用（フォールバック）
+            // iframe内のwindowオブジェクトに直接アクセス
+            const frameWindow = this.contentFrame.contentWindow;
+            if (frameWindow) {
+                // 現在のスクロール位置を取得
+                let currentScroll = 0;
+                let maxScroll = 0;
                 try {
-                    const frameWindow = this.contentFrame.contentWindow;
-                    if (frameWindow) {
-                        frameWindow.scrollBy(0, 500);
-                        console.log('Method 1C - window.scrollBy executed');
-                    }
+                    currentScroll = frameWindow.pageYOffset || frameWindow.scrollY || 0;
+                    maxScroll = frameWindow.document.documentElement.scrollHeight - frameWindow.innerHeight;
+                    console.log('Current scroll position:', currentScroll, 'Max scroll:', maxScroll);
+                } catch(e) {
+                    console.log('Could not get scroll position:', e.message);
+                }
+                
+                // スクロール量
+                const scrollAmount = 500;
+                const newPosition = Math.min(maxScroll, currentScroll + scrollAmount);
+                
+                // 複数の方法でスクロール実行
+                try {
+                    // 方法A: scrollTo
+                    frameWindow.scrollTo(0, newPosition);
+                    console.log('Method 1A - scrollTo executed:', newPosition);
+                } catch(e) {
+                    console.log('scrollTo failed:', e.message);
+                }
+                
+                try {
+                    // 方法B: scrollBy
+                    frameWindow.scrollBy(0, scrollAmount);
+                    console.log('Method 1B - scrollBy executed:', scrollAmount);
                 } catch(e) {
                     console.log('scrollBy failed:', e.message);
                 }
                 
-                console.log('Method 1 - Multiple key events dispatched');
-            }, 100);
-            
-            this.showMessage('下スクロール（キー操作）');
-            scrolled = true;
+                try {
+                    // 方法C: document.body.scrollTop直接操作
+                    frameWindow.document.documentElement.scrollTop = newPosition;
+                    frameWindow.document.body.scrollTop = newPosition;
+                    console.log('Method 1C - direct scrollTop executed:', newPosition);
+                } catch(e) {
+                    console.log('direct scrollTop failed:', e.message);
+                }
+                
+                scrolled = true;
+                this.showMessage(`下スクロール実行 (${currentScroll} → ${newPosition})`);
+            } else {
+                console.log('frameWindow not accessible');
+            }
             
         } catch (error) {
             console.log('Method 1 failed:', error.message);
